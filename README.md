@@ -1,30 +1,26 @@
-# 
-# CSDN: v_for_van
-# WeChat Official Account: ĞÇ»ğÔÚÃşÓã (Xinghuo Zai Moyu)
-# GitHub: 1StarStarFire1
-# 
 # Current Version V1.0 - Implements basic transmit/receive functionality with known limitations
-#
+- CSDN: v_for_van
+- WeChat Official Account: æ˜Ÿç«åœ¨æ‘¸é±¼ (Xinghuo Zai Moyu)
+- GitHub: 1StarStarFire1
+
 # Software UART Implementation
 - Supports ESP-IDF platform (tested on ESP32-S3 with ESP-IDF v5.21)
 - Configurable baud rate, GPIO pins, and buffer size
 - Efficient reception using ring buffer mechanism
 - Interrupt-driven reception with polling-based transmission
 
-# 
-# CSDN£ºv_for_van
-# Î¢ĞÅ¹«ÖÚºÅ£ºĞÇ»ğÔÚÃşÓã
-# github£º1StarStarFire1
-# 
-# µ±Ç°°æ±¾V1.0 - ÊµÏÖÁË×î»ù±¾µÄÊÕ·¢¹¦ÄÜ£¬»¹ÓĞºÜ¶àÇ·È±
-#
-# Èí¼şUARTÊµÏÖ
-- Ö§³ÖESPIDFÆ½Ì¨(Ä¿Ç°Ö»ÊµÑé¹ıesp32s3 v5.21°æ±¾)
-- Ö§³Ö¿ÉÅäÖÃµÄ²¨ÌØÂÊ¡¢Òı½ÅºÍ»º³åÇø´óĞ¡
-- Ê¹ÓÃ»·ĞÎ»º³åÇøÊµÏÖ¸ßĞ§½ÓÊÕ
-- Ö§³ÖÖĞ¶ÏÇı¶¯½ÓÊÕºÍÂÖÑ¯·¢ËÍ
+# å½“å‰ç‰ˆæœ¬V1.0 - å®ç°äº†æœ€åŸºæœ¬çš„æ”¶å‘åŠŸèƒ½ï¼Œè¿˜æœ‰å¾ˆå¤šæ¬ ç¼º 
+- CSDNï¼šv_for_van
+- å¾®ä¿¡å…¬ä¼—å·ï¼šæ˜Ÿç«åœ¨æ‘¸é±¼
+- githubï¼š1StarStarFire1
 
-## Ê¹ÓÃÊ¾Àı
+# è½¯ä»¶UARTå®ç°
+- æ”¯æŒESPIDFå¹³å°(ç›®å‰åªå®éªŒè¿‡esp32s3 v5.21ç‰ˆæœ¬)
+- æ”¯æŒå¯é…ç½®çš„æ³¢ç‰¹ç‡ã€å¼•è„šå’Œç¼“å†²åŒºå¤§å°
+- ä½¿ç”¨ç¯å½¢ç¼“å†²åŒºå®ç°é«˜æ•ˆæ¥æ”¶
+- æ”¯æŒä¸­æ–­é©±åŠ¨æ¥æ”¶å’Œè½®è¯¢å‘é€
+
+## ä½¿ç”¨ç¤ºä¾‹
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
