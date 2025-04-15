@@ -1,11 +1,11 @@
 /* 
  * CSDN: v_for_van
- * WeChat Official Account: Xinghuo Zai Moyu (–«ª‘⁄√˛”„)
+ * WeChat Official Account: Xinghuo Zai Moyu (√ê√á¬ª√∞√î√ö√É√æ√ì√£)
  * GitHub: 1StarStarFire1
  */
 
-#ifndef _SOFTSERIAL_H_
-#define _SOFTSERIAL_H_
+#ifndef _SOFTSERIAL_ENGLISH_H_
+#define _SOFTSERIAL_ENGLISH_H_
 
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
