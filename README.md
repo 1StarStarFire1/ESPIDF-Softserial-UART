@@ -21,6 +21,7 @@
 - 支持中断驱动接收和轮询发送
 
 ## 使用示例
+```
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -59,3 +60,4 @@ void app_main()
         vTaskDelay(100 / portTICK_PERIOD_MS);
     }
 }
+```
