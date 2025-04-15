@@ -47,6 +47,7 @@ void IRAM_ATTR software_uart_rx_isr(void* arg)
         uint8_t data = 0;
         uint64_t star = esp_cpu_get_cycle_count();
         wait_time(&star, (uart->bit_cycles)/2); // Align to middle of first data bit
+        //wait_time(&star , (uart->bit_cycles)/3); //if 115200
         if(gpio_get_level(uart->rx_pin) == 0) // Confirm start bit
         {
             // Read 8 data bits (LSB first)
