@@ -1,10 +1,10 @@
 /* 
  * CSDN: v_for_van
- * WeChat Official Account: Xinghuo Zai Moyu (ĞÇ»ğÔÚÃşÓã)
+ * WeChat Official Account: Xinghuo Zai Moyu (ÃÃ‡Â»Ã°Ã”ÃšÃƒÃ¾Ã“Ã£)
  * GitHub: 1StarStarFire1
  */
 
-#include "softserial.h"
+#include "softserial_english.h"
 
 /* 
  * Calculate bit time in CPU cycles
