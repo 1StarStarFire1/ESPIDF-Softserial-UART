@@ -1,30 +1,30 @@
 /* 
- * CSDN£ºv_for_van
- * Î¢ĞÅ¹«ÖÚºÅ£ºĞÇ»ğÔÚÃşÓã
- * github£º1StarStarFire1
+ * CSDNï¼šv_for_van
+ * å¾®ä¿¡å…¬ä¼—å·ï¼šæ˜Ÿç«åœ¨æ‘¸é±¼
+ * githubï¼š1StarStarFire1
  */
 
 #include "softserial.h"
 
 /* 
- * ¼ÆËãÃ¿Î»Ê±¼ä£¨CPUÖÜÆÚ£©
- * @param baud_rate ²¨ÌØÂÊ
- * @return Ã¿Î»¶ÔÓ¦CPUÖÜÆÚÊı
- * @note ³ËÒÔ2ÊÇÎªÁË²¹³¥ESP32µÄGPIO²ÉÑùÑÓ³ÙºÍ·ÖÆµ»úÖÆ
+ * è®¡ç®—æ¯ä½æ—¶é—´ï¼ˆCPUå‘¨æœŸï¼‰
+ * @param baud_rate æ³¢ç‰¹ç‡
+ * @return æ¯ä½å¯¹åº”CPUå‘¨æœŸæ•°
+ * @note ä¹˜ä»¥2æ˜¯ä¸ºäº†è¡¥å¿ESP32çš„GPIOé‡‡æ ·å»¶è¿Ÿå’Œåˆ†é¢‘æœºåˆ¶
  */
 uint64_t calculate_bit_time(uint32_t baud_rate) 
 {
     uint64_t bit_time_us = (1000000UL / baud_rate);
-    return 2 * bit_time_us * (CPU_CLK_FREQ / 1000000);  // ×ª»»ÎªCPUÖÜÆÚÊı  
-    //×¢Òâ£ºÇ°ÃæĞèÒª*Ò»¸ö2£¬²»È»µÄ»°»á¶Á´í£¬Ó¦¸ÃÊÇÄÚ²¿ÓĞ·ÖÆµÖ®ÀàµÄ£¬²»Ì«¶®
+    return 2 * bit_time_us * (CPU_CLK_FREQ / 1000000);  // è½¬æ¢ä¸ºCPUå‘¨æœŸæ•°  
+    //æ³¨æ„ï¼šå‰é¢éœ€è¦*ä¸€ä¸ª2ï¼Œä¸ç„¶çš„è¯ä¼šè¯»é”™ï¼Œåº”è¯¥æ˜¯å†…éƒ¨æœ‰åˆ†é¢‘ä¹‹ç±»çš„ï¼Œä¸å¤ªæ‡‚
 }
 
 
 /* 
- * ¾«È·µÈ´ıÖ¸¶¨CPUÖÜÆÚ
- * @param star Ö¸ÏòÆğÊ¼Ê±¼äµÄÖ¸Õë£¨×Ô¶¯¸üĞÂ£©
- * @param bit_cycles ĞèÒªµÈ´ıµÄÖÜÆÚÊı
- * @notestar ±äÎª+=bit_cycles
+ * ç²¾ç¡®ç­‰å¾…æŒ‡å®šCPUå‘¨æœŸ
+ * @param star æŒ‡å‘èµ·å§‹æ—¶é—´çš„æŒ‡é’ˆï¼ˆè‡ªåŠ¨æ›´æ–°ï¼‰
+ * @param bit_cycles éœ€è¦ç­‰å¾…çš„å‘¨æœŸæ•°
+ * @notestar å˜ä¸º+=bit_cycles
  */
 void wait_time(uint64_t* star , uint64_t bit_cycles)
 {
@@ -33,37 +33,38 @@ void wait_time(uint64_t* star , uint64_t bit_cycles)
 }
 
 /* 
- * ½ÓÊÕÖĞ¶Ï·şÎñÀı³Ì£¨ISR£©
- * @param arg Èí¼şUART½á¹¹ÌåÖ¸Õë
- * @note ±ØĞëÔÚÁÙ½çÇøÖĞ´¦ÀíÖĞ¶Ï
+ * æ¥æ”¶ä¸­æ–­æœåŠ¡ä¾‹ç¨‹ï¼ˆISRï¼‰
+ * @param arg è½¯ä»¶UARTç»“æ„ä½“æŒ‡é’ˆ
+ * @note å¿…é¡»åœ¨ä¸´ç•ŒåŒºä¸­å¤„ç†ä¸­æ–­
  */
 void IRAM_ATTR software_uart_rx_isr(void* arg) 
 {
     SoftwareUART* uart = (SoftwareUART*)arg;
     portBASE_TYPE higher_priority_task_woken = pdFALSE;
 
-    // ½øÈëÁÙ½çÇø
+    // è¿›å…¥ä¸´ç•ŒåŒº
     portENTER_CRITICAL_ISR(&uart->lock);
-    // ¼ì²âÆğÊ¼Î»£¨ÏÂ½µÑØ´¥·¢£©
+    // æ£€æµ‹èµ·å§‹ä½ï¼ˆä¸‹é™æ²¿è§¦å‘ï¼‰
     if (gpio_get_level(uart->rx_pin) == 0) 
     {
         uint8_t data = 0;
         uint64_t star = esp_cpu_get_cycle_count();
-        wait_time(&star , (uart->bit_cycles)/2);//³ıÒÔ¶ş±£Ö¤ÔÚbitÖĞÎ»¶ÁÈ¡Êı¾İ
-        if(gpio_get_level(uart->rx_pin) == 0)//ÆğÊ¼Î»
+        wait_time(&star , (uart->bit_cycles)/2);//é™¤ä»¥äºŒä¿è¯åœ¨bitä¸­ä½è¯»å–æ•°æ®
+        //wait_time(&star , (uart->bit_cycles)/3); //if 115200
+        if(gpio_get_level(uart->rx_pin) == 0)//èµ·å§‹ä½
         {
-            // ¶ÁÈ¡8Î»Êı¾İ£¨LSBµ½ MSB£©
+            // è¯»å–8ä½æ•°æ®ï¼ˆLSBåˆ° MSBï¼‰
             for (int i = 0; i < 8; i++) 
             {
-                wait_time(&star , uart->bit_cycles);  // µÈ´ıÖÁ²ÉÑùµã
+                wait_time(&star , uart->bit_cycles);  // ç­‰å¾…è‡³é‡‡æ ·ç‚¹
                 data |= (gpio_get_level(uart->rx_pin) << i);
-                // µÈ´ıÏÂÒ»ÖÜÆÚ
+                // ç­‰å¾…ä¸‹ä¸€å‘¨æœŸ
             }
-            // ¼ì²éÍ£Ö¹Î»£¨Ó¦Îª¸ßµçÆ½£©
+            // æ£€æŸ¥åœæ­¢ä½ï¼ˆåº”ä¸ºé«˜ç”µå¹³ï¼‰
             wait_time(&star , uart->bit_cycles);
-            if (gpio_get_level(uart->rx_pin) == 1) //Í£Ö¹Î»
+            if (gpio_get_level(uart->rx_pin) == 1) //åœæ­¢ä½
             {
-                // ´æÈë»º³åÇø
+                // å­˜å…¥ç¼“å†²åŒº
                 uint16_t next_head = (uart->rx_buffer.head + 1) % uart->rx_buff_size;
                 if (next_head != uart->rx_buffer.tail) 
                 {
@@ -78,24 +79,24 @@ void IRAM_ATTR software_uart_rx_isr(void* arg)
 }
 
 /* 
- * ³õÊ¼»¯Èí¼şUART
- * @param uart Èí¼şUART½á¹¹ÌåÖ¸Õë
- * @note Ä¬ÈÏÅäÖÃ£ºTX=11, RX=12, ²¨ÌØÂÊ38400, »º³åÇø128×Ö½Ú
+ * åˆå§‹åŒ–è½¯ä»¶UART
+ * @param uart è½¯ä»¶UARTç»“æ„ä½“æŒ‡é’ˆ
+ * @note é»˜è®¤é…ç½®ï¼šTX=11, RX=12, æ³¢ç‰¹ç‡38400, ç¼“å†²åŒº128å­—èŠ‚
  */
 void software_uart_init(SoftwareUART *uart) 
 {
-    if (uart->tx_pin == 0) uart->tx_pin = 11;    // Ä¬ÈÏTXÒı½Å
-    if (uart->rx_pin == 0) uart->rx_pin = 12;    // Ä¬ÈÏRXÒı½Å
-    if (uart->rx_buff_size == 0) uart->rx_buff_size = 128; // Ä¬ÈÏ»º³åÇø´óĞ¡
-    if (uart->baud_rate == 0) uart->baud_rate = 38400; // Ä¬ÈÏ²¨ÌØÂÊ
+    if (uart->tx_pin == 0) uart->tx_pin = 11;    // é»˜è®¤TXå¼•è„š
+    if (uart->rx_pin == 0) uart->rx_pin = 12;    // é»˜è®¤RXå¼•è„š
+    if (uart->rx_buff_size == 0) uart->rx_buff_size = 128; // é»˜è®¤ç¼“å†²åŒºå¤§å°
+    if (uart->baud_rate == 0) uart->baud_rate = 38400; // é»˜è®¤æ³¢ç‰¹ç‡
 
-    // ¼ÆËãÃ¿Î»Ê±¼ä(cpuÖÜÆÚ)
+    // è®¡ç®—æ¯ä½æ—¶é—´(cpuå‘¨æœŸ)
     uart->bit_cycles = calculate_bit_time(uart->baud_rate);
 
-    //»º´æÇøÅäÖÃ
+    //ç¼“å­˜åŒºé…ç½®
     uart->rx_buffer.buffer = (uint8_t*)malloc(uart->rx_buff_size * sizeof(uint8_t));
 
-    // ÅäÖÃ·¢ËÍÒı½ÅÎªÊä³ö
+    // é…ç½®å‘é€å¼•è„šä¸ºè¾“å‡º
     gpio_config_t tx_conf = 
     {
         .pin_bit_mask = (1ULL << uart->tx_pin),
@@ -106,64 +107,64 @@ void software_uart_init(SoftwareUART *uart)
     };
     ESP_ERROR_CHECK(gpio_config(&tx_conf));
 
-    // ÅäÖÃ½ÓÊÕÒı½ÅÎªÊäÈë£¬²¢ÆôÓÃÖĞ¶Ï
+    // é…ç½®æ¥æ”¶å¼•è„šä¸ºè¾“å…¥ï¼Œå¹¶å¯ç”¨ä¸­æ–­
     gpio_config_t rx_conf = 
     {
         .pin_bit_mask = (1ULL << uart->rx_pin),
         .mode = GPIO_MODE_INPUT,
         .pull_up_en = GPIO_PULLUP_ENABLE,
         .pull_down_en = GPIO_PULLDOWN_DISABLE,
-        .intr_type = GPIO_INTR_NEGEDGE  // ¼ì²âÆğÊ¼Î»ÏÂ½µÑØ
+        .intr_type = GPIO_INTR_NEGEDGE  // æ£€æµ‹èµ·å§‹ä½ä¸‹é™æ²¿
     };
     ESP_ERROR_CHECK(gpio_config(&rx_conf));
 
-    // ³õÊ¼»¯½ÓÊÕ»º³åÇø
+    // åˆå§‹åŒ–æ¥æ”¶ç¼“å†²åŒº
     uart->rx_buffer.head = 0;
     uart->rx_buffer.tail = 0;
 
-    // ³õÊ¼»¯ÁÙ½çÇøËø
+    // åˆå§‹åŒ–ä¸´ç•ŒåŒºé”
     portMUX_INITIALIZE(&uart->lock);
 
-    // °²×°GPIOÖĞ¶Ï·şÎñ
+    // å®‰è£…GPIOä¸­æ–­æœåŠ¡
     ESP_ERROR_CHECK(gpio_install_isr_service(0));
-    ESP_ERROR_CHECK(gpio_isr_handler_add(uart->rx_pin, software_uart_rx_isr,(void*)uart));//´«Èërx Óë½á¹¹ÌåµÄÖµ
+    ESP_ERROR_CHECK(gpio_isr_handler_add(uart->rx_pin, software_uart_rx_isr,(void*)uart));//ä¼ å…¥rx ä¸ç»“æ„ä½“çš„å€¼
 }
 
 
 /* 
- * ·¢ËÍÒ»¸ö×Ö½Ú£¨8Î»Êı¾İ + ÆğÊ¼Î» + Í£Ö¹Î»£©
- * @param uart Èí¼şUART½á¹¹ÌåÖ¸Õë
- * @param data ĞèÒª·¢ËÍµÄ8Î»Êı¾İ
+ * å‘é€ä¸€ä¸ªå­—èŠ‚ï¼ˆ8ä½æ•°æ® + èµ·å§‹ä½ + åœæ­¢ä½ï¼‰
+ * @param uart è½¯ä»¶UARTç»“æ„ä½“æŒ‡é’ˆ
+ * @param data éœ€è¦å‘é€çš„8ä½æ•°æ®
  */
 void software_uart_tx_byte(SoftwareUART *uart, uint8_t data) 
 {
     portENTER_CRITICAL(&uart->lock);
 
-    // ·¢ËÍÆğÊ¼Î»£¨µÍµçÆ½£©
+    // å‘é€èµ·å§‹ä½ï¼ˆä½ç”µå¹³ï¼‰
     gpio_set_level(uart->tx_pin, 0);
-    //¿ªÊ¼Ê±¼ä
+    //å¼€å§‹æ—¶é—´
     uint64_t star = esp_cpu_get_cycle_count(); 
-    //³ÖĞøÒ»¸öbit
+    //æŒç»­ä¸€ä¸ªbit
     wait_time(&star , uart->bit_cycles);
-    // ·¢ËÍ8Î»Êı¾İ£¨LSBÏÈ·¢ËÍ£©
+    // å‘é€8ä½æ•°æ®ï¼ˆLSBå…ˆå‘é€ï¼‰
     for (int i = 0; i < 8; i++) 
     {
         gpio_set_level(uart->tx_pin, (data >> i) & 0x01);
-        //³ÖĞøÒ»¸öbit
+        //æŒç»­ä¸€ä¸ªbit
         wait_time(&star , uart->bit_cycles);
     }
 
-    // ·¢ËÍÍ£Ö¹Î»£¨¸ßµçÆ½£©
+    // å‘é€åœæ­¢ä½ï¼ˆé«˜ç”µå¹³ï¼‰
     gpio_set_level(uart->tx_pin, 1);
-    //³ÖĞøÒ»¸öbit
+    //æŒç»­ä¸€ä¸ªbit
     wait_time(&star , uart->bit_cycles);
     portEXIT_CRITICAL(&uart->lock);
 }
 
 /* 
- * ·¢ËÍ×Ö·û´®£¨Öğ×Ö½Ú·¢ËÍ£©
- * @param uart Èí¼şUART½á¹¹ÌåÖ¸Õë
- * @param str ĞèÒª·¢ËÍµÄÒÔNULL½áÎ²µÄ×Ö·û´®
+ * å‘é€å­—ç¬¦ä¸²ï¼ˆé€å­—èŠ‚å‘é€ï¼‰
+ * @param uart è½¯ä»¶UARTç»“æ„ä½“æŒ‡é’ˆ
+ * @param str éœ€è¦å‘é€çš„ä»¥NULLç»“å°¾çš„å­—ç¬¦ä¸²
  */
 void software_uart_tx_str(SoftwareUART *uart,const char* str) 
 {
@@ -174,22 +175,22 @@ void software_uart_tx_str(SoftwareUART *uart,const char* str)
 }
 
 /* 
- * ´Ó½ÓÊÕ»º³åÇø¶ÁÈ¡Êı¾İ
- * @param uart Èí¼şUART½á¹¹ÌåÖ¸Õë
- * @param data ´æ´¢¶ÁÈ¡Êı¾İµÄ»º³åÇø
- * @param size ĞèÒª¶ÁÈ¡µÄ×î´ó×Ö½ÚÊı
- * @return Êµ¼Ê¶ÁÈ¡µÄ×Ö½ÚÊı
+ * ä»æ¥æ”¶ç¼“å†²åŒºè¯»å–æ•°æ®
+ * @param uart è½¯ä»¶UARTç»“æ„ä½“æŒ‡é’ˆ
+ * @param data å­˜å‚¨è¯»å–æ•°æ®çš„ç¼“å†²åŒº
+ * @param size éœ€è¦è¯»å–çš„æœ€å¤§å­—èŠ‚æ•°
+ * @return å®é™…è¯»å–çš„å­—èŠ‚æ•°
  */
 int software_uart_rx_read(SoftwareUART *uart, uint8_t* data, size_t size) 
 {
-    //ÁÙ½çÇø
+    //ä¸´ç•ŒåŒº
     portENTER_CRITICAL(&uart->lock);
 
-    //»ñÈ¡¿É¶Á»º´æÇø´óĞ¡
+    //è·å–å¯è¯»ç¼“å­˜åŒºå¤§å°
     size_t available = (uart->rx_buffer.head - uart->rx_buffer.tail) % uart->rx_buff_size;
     size_t read_size = (available < size) ? available : size;
 
-    //¶ÁÈ¡µ½data
+    //è¯»å–åˆ°data
     for (size_t i = 0; i < read_size; i++) 
     {
         data[i] = uart->rx_buffer.buffer[uart->rx_buffer.tail];
