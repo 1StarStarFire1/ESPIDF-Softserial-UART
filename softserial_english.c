@@ -14,8 +14,10 @@
  */
 uint64_t calculate_bit_time(uint32_t baud_rate) 
 {
-    uint64_t bit_time_us = (1000000UL / baud_rate);
-    return 2 * bit_time_us * (CPU_CLK_FREQ / 1000000);  // Convert to CPU cycles  
+    //uint64_t bit_time_us = (1000000UL / baud_rate); // Original calculation may accumulate rounding errors, thus discarded
+
+    return 2 * (CPU_CLK_FREQ / baud_rate); // Convert to CPU clock cycles
+    // CPU_CLK_FREQ is defined as 80MHz, but the actual CPU frequency is 160MHz due to clock multiplication. This can be verified using esp_cpu_get_cycle_count()
 }
 
 /* 
@@ -23,10 +25,11 @@ uint64_t calculate_bit_time(uint32_t baud_rate)
  * @param star Pointer to start time (auto-updated)
  * @param bit_cycles Cycles to wait
  */
-void wait_time(uint64_t* star, uint64_t bit_cycles)
+void wait_time(uint64_t* star , uint64_t bit_cycles)
 {
-    while(esp_cpu_get_cycle_count() - *star < bit_cycles);
-    *star += bit_cycles;
+    uint64_t end = *star + bit_cycles;
+    while(esp_cpu_get_cycle_count() < end);
+    *star = end;
 }
 
 /* 
@@ -97,11 +100,12 @@ void software_uart_init(SoftwareUART *uart)
     {
         .pin_bit_mask = (1ULL << uart->tx_pin),
         .mode = GPIO_MODE_OUTPUT,
-        .pull_up_en = GPIO_PULLUP_DISABLE,
-        .pull_down_en = GPIO_PULLDOWN_DISABLE,
+        .pull_up_en = GPIO_PULLUP_ENABLE,
+        .pull_down_en = GPIO_PULLUP_ENABLE,
         .intr_type = GPIO_INTR_DISABLE
     };
     ESP_ERROR_CHECK(gpio_config(&tx_conf));
+    gpio_set_level(uart->tx_pin, 1);
 
     // Configure RX pin as input with interrupt
     gpio_config_t rx_conf = 
@@ -135,9 +139,9 @@ void software_uart_tx_byte(SoftwareUART *uart, uint8_t data)
 {
     portENTER_CRITICAL(&uart->lock);
 
+    uint64_t star = esp_cpu_get_cycle_count(); 
     // Send start bit (low level)
     gpio_set_level(uart->tx_pin, 0);
-    uint64_t star = esp_cpu_get_cycle_count(); 
     wait_time(&star, uart->bit_cycles); // Maintain start bit duration
 
     // Send 8 data bits (LSB first)
