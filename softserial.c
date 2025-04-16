@@ -14,9 +14,10 @@
  */
 uint64_t calculate_bit_time(uint32_t baud_rate) 
 {
-    uint64_t bit_time_us = (1000000UL / baud_rate);
-    return 2 * bit_time_us * (CPU_CLK_FREQ / 1000000);  // 转换为CPU周期数  
-    //注意：前面需要*一个2，不然的话会读错，应该是内部有分频之类的，不太懂
+    //uint64_t bit_time_us = (1000000UL / baud_rate); //原本计算会有四舍五入积累误差，故舍去
+
+    return 2 *  (CPU_CLK_FREQ / baud_rate);  // 转换为CPU周期数
+    //CPU_CLK_FREQ = 80Mhz 但是 cpu经过倍频 其真正频率为 = 160Mhz 通过使用esp_cpu_get_cycle_count()可以验证其频率
 }
 
 
@@ -28,8 +29,9 @@ uint64_t calculate_bit_time(uint32_t baud_rate)
  */
 void wait_time(uint64_t* star , uint64_t bit_cycles)
 {
-    while(esp_cpu_get_cycle_count() - *star < bit_cycles);
-    *star += bit_cycles;
+    uint64_t end = *star + bit_cycles;
+    while(esp_cpu_get_cycle_count() < end);
+    *star = end;
 }
 
 /* 
@@ -101,12 +103,13 @@ void software_uart_init(SoftwareUART *uart)
     {
         .pin_bit_mask = (1ULL << uart->tx_pin),
         .mode = GPIO_MODE_OUTPUT,
-        .pull_up_en = GPIO_PULLUP_DISABLE,
-        .pull_down_en = GPIO_PULLDOWN_DISABLE,
+        .pull_up_en = GPIO_PULLUP_ENABLE,
+        .pull_down_en = GPIO_PULLUP_ENABLE,
         .intr_type = GPIO_INTR_DISABLE
     };
     ESP_ERROR_CHECK(gpio_config(&tx_conf));
-
+    gpio_set_level(uart->tx_pin, 1);
+    
     // 配置接收引脚为输入，并启用中断
     gpio_config_t rx_conf = 
     {
@@ -139,11 +142,10 @@ void software_uart_init(SoftwareUART *uart)
 void software_uart_tx_byte(SoftwareUART *uart, uint8_t data) 
 {
     portENTER_CRITICAL(&uart->lock);
-
-    // 发送起始位（低电平）
-    gpio_set_level(uart->tx_pin, 0);
     //开始时间
     uint64_t star = esp_cpu_get_cycle_count(); 
+    // 发送起始位（低电平）
+    gpio_set_level(uart->tx_pin, 0);
     //持续一个bit
     wait_time(&star , uart->bit_cycles);
     // 发送8位数据（LSB先发送）
